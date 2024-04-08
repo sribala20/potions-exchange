@@ -43,7 +43,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
     return [ # purchasing one new small green barrel if num_potions < 10
         {
-            "sku": "SMALL_GREEN _BARREL", 
+            "sku": "SMALL_GREEN_BARREL", 
             "quantity": new_barrel,
         }
     ]
