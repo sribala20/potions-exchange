@@ -2,9 +2,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api import auth
 import sqlalchemy
-from src import database as db
-       
-                  
+from src import database as db     
 
 router = APIRouter(
     prefix="/barrels",
@@ -40,7 +38,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     new_barrel = 0
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("SELECT num_green_potions from global_inventory"))
-        potions = result.scalar
+        potions = result.scalar()
         if potions < 10:
             new_barrel = 1  
 

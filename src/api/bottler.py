@@ -37,7 +37,7 @@ def get_bottle_plan():
         total_ml = 0
         green_potions = 0
         result = connection.execute(sqlalchemy.text("SELECT num_green_ml from global_inventory"))
-        total_ml = result.scalar
+        total_ml = result.scalar()
         green_potions = total_ml // 100
 
     # Each bottle has a quantity of what proportion of red, blue, and

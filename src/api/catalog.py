@@ -14,7 +14,7 @@ def get_catalog():
     green_count = 0
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("SELECT num_green_potions from global_inventory"))
-        green_count = result.scalar
+        green_count = result.scalar()
     
     return [
             {
