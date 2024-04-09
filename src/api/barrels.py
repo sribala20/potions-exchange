@@ -40,9 +40,9 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     new_barrel = 0
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("SELECT num_green_potions from global_inventory"))
-        for row in result:
-             if row[0] < 10:
-                  new_barrel = 1  
+        potions = result.scalar
+        if potions < 10:
+            new_barrel = 1  
 
     print(wholesale_catalog)
 
