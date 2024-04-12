@@ -43,13 +43,15 @@ def get_bottle_plan():
     # Expressed in integers from 1 to 100 that must sum up to 100.
 
     # Initial logic: bottle all barrels into GREEN potions.
-
+    if green_potions == 0:
+        return []
     return [
             {
                 "potion_type": [0, 100, 0, 0],
                 "quantity": green_potions,
             }
         ]
+
 
 if __name__ == "__main__":
     print(get_bottle_plan())
