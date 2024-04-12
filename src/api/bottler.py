@@ -18,13 +18,16 @@ class PotionInventory(BaseModel):
 @router.post("/deliver/{order_id}")
 # posts delivery of potions, order_id = value of single delivery
 def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int):
+    quant, total_ml = 0
     for potion in potions_delivered:
-         # - mL, + potions 
-        with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_ml = num_green_ml - 100"))
-            connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_potions = num_green_potions + 1"))
-        
+        quant += potion.quantity
+        total_ml += quant * 100
         print(potion)
+    # - mL, + potions 
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_ml = num_green_ml - :total_ml"), {"total_ml": total_ml})
+        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_potions = num_green_potions + :quant"), {"quant": quant})
+        
     print(f"potions delievered: {potions_delivered} order_id: {order_id}")
 
     return "OK"
