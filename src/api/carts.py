@@ -72,7 +72,7 @@ def search_orders(
 class Customer(BaseModel):
     customer_name: str
     character_class: str
-    level: int
+    level: int # assume unique?
 
 @router.post("/visits/{visit_id}")
 def post_visits(visit_id: int, customers: list[Customer]):
@@ -86,18 +86,21 @@ def post_visits(visit_id: int, customers: list[Customer]):
 
 @router.post("/")
 def create_cart(new_cart: Customer):
+    # num = sum(ord(char) for char in Customer.customer_name)
     """ """
-    return {"cart_id": 1}
+    return {"cart_id": Customer.level}
 
 
 class CartItem(BaseModel):
     quantity: int
 
+cart_dict = {}
 
+# adds items to cart
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     """ """
-
+    cart_dict[cart_id] = [item_sku, cart_item.quantity]
     return "OK"
 
 
@@ -106,8 +109,21 @@ class CartCheckout(BaseModel):
 
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout):
+    gold = 0
     with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_potions = num_green_potions - 1"))
-            connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold + 50"))
+        quant = cart_dict[cart_id][1]
+        if cart_dict[cart_id][0] == "RED_POTION_0":
+            connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_red_potions = num_red_potions - :quant"), {"quant": quant})
+            connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold + 5"))
+            gold = 5
+        elif cart_dict[cart_id][0] == "GREEN_POTION_0":
+            connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_potions = num_green_potions - :quant"),{"quant": quant})
+            connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold + 10"))
+            gold = 10
+        else:
+            connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_blue_potions = num_blue_potions - :quant"),{"quant": quant})
+            connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold + 20"))
+            gold = 20
 
-    return {"total_potions_bought": 1, "total_gold_paid": 5}
+
+    return {"total_potions_bought": quant, "total_gold_paid": gold}
