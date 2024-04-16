@@ -44,21 +44,24 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     print(wholesale_catalog)
     with db.engine.begin() as connection:
-        potions = connection.execute(sqlalchemy.text("SELECT num_green_potions from global_inventory")).scalar()
+        red_potions = connection.execute(sqlalchemy.text("SELECT num_red_potions from global_inventory")).scalar()
+        green_potions = connection.execute(sqlalchemy.text("SELECT num_green_potions from global_inventory")).scalar()
+        blue_potions = connection.execute(sqlalchemy.text("SELECT num_blue_potions from global_inventory")).scalar()
+        
+        potions = red_potions + green_potions + blue_potions
         gold = connection.execute(sqlalchemy.text("SELECT gold from global_inventory")).scalar()
+        barrel_lst = []
 
         for barrel in wholesale_catalog:
-            print ("potions = ", potions, "gold = ",gold)
-            if potions < 10 and gold >= barrel.price and barrel.sku == "SMALL_GREEN_BARREL":
-                return [ # purchasing one new small green barrel if num_potions < 10 and gold sufficient
-                    {
-                            "sku": "SMALL_GREEN_BARREL", 
-                            "quantity": 1,
-                    }
-                ]
-        print(price)
+            if potions < 10 and gold >= barrel.price:
+                barrel_lst.append({"sku": barrel.sku, "quantity": 1})
+                gold -= barrel.price
+        
+        print ("potions = ", potions, ", gold = ",gold)
+        print ("barrels:", barrel_lst)
 
-    return []
+
+        return barrel_lst
     
 
     
