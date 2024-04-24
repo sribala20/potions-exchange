@@ -13,39 +13,15 @@ def get_catalog():
     """
     catalog_lst = []
     with db.engine.begin() as connection:
-        red_count = connection.execute(sqlalchemy.text("SELECT num_red_potions from global_inventory")).scalar()
-        green_count = connection.execute(sqlalchemy.text("SELECT num_green_potions from global_inventory")).scalar()
-        blue_count = connection.execute(sqlalchemy.text("SELECT num_blue_potions from global_inventory")).scalar()
-    
-    if red_count > 0:
-        catalog_lst.append(
-            {
-                "sku": "RED_POTION_0",
-                "name": "red potion",
-                "quantity": red_count,
-                "price": 5,
-                "potion_type": [100, 0, 0, 0],
-            })
-        
-    if green_count > 0:
-        catalog_lst.append(
-            {
-                "sku": "GREEN_POTION_0",
-                "name": "green potion",
-                "quantity": green_count,
-                "price": 10,
-                "potion_type": [0, 100, 0, 0],
-            })
-    
-    if blue_count > 0:
-        catalog_lst.append(
-            {
-                "sku": "BLUE_POTION_0",
-                "name": "blue potion",
-                "quantity": blue_count,
-                "price": 20,
-                "potion_type": [0, 0, 100, 0],
-            })
-    
+        stash = connection.execute(sqlalchemy.text("SELECT sku, name, quantity, price, type from potions"))
+        for row in stash:
+            catalog_lst.append(
+                {
+                    "sku": row.sku,
+                    "name": row.name,
+                    "quantity": row.quantity,
+                    "price": row.price,
+                    "potion_type": row.type,
+                })
     
     return catalog_lst
