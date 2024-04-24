@@ -25,6 +25,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
     blue_ml = 0
     green_ml = 0
     price = 0
+    
     for barrel in barrels_delivered:
         price += (barrel.price * barrel.quantity)
         if barrel.potion_type == [1,0,0,0]:
@@ -48,36 +49,66 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
         connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold - :price"),
         {"price": price})
             
-    print(f"gold_paid: {price}, order_id: {order_id}") # edit debugging statement
+    print(f"gold_paid: {price}, order_id: {order_id}") 
 
 
     return "OK"
-
+    
 # Gets called once a day
 # catalog of av. barrels -> which barrels to purchase and how many
 @router.post("/plan")
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     print(wholesale_catalog)
+
+    ordered_barrels = barrel_sizes(wholesale_catalog)
+
     with db.engine.begin() as connection:
-        red_potions = connection.execute(sqlalchemy.text("SELECT num_red_potions from global_inventory")).scalar()
-        green_potions = connection.execute(sqlalchemy.text("SELECT num_green_potions from global_inventory")).scalar()
-        blue_potions = connection.execute(sqlalchemy.text("SELECT num_blue_potions from global_inventory")).scalar()
+        # spend half gold on barrels
+        gold = connection.execute(sqlalchemy.text("SELECT gold from global_inventory")).scalar()//2
+
+    order_plan = []
+    for barrel in ordered_barrels:
+        if gold < barrel.price:
+            break
+        order_plan.append({"sku": barrel.sku, "quantity": 1})
+        gold -= barrel.price
         
-        potions = red_potions + green_potions + blue_potions
-        gold = connection.execute(sqlalchemy.text("SELECT gold from global_inventory")).scalar()
-        barrel_lst = []
-
-        for barrel in wholesale_catalog:
-            if potions < 10 and gold >= barrel.price:
-                barrel_lst.append({"sku": barrel.sku, "quantity": 1})
-                gold -= barrel.price
-        
-        print ("potions = ", potions, ", gold = ",gold)
-        print ("barrels:", barrel_lst)
-
-
-        return barrel_lst
+    print ("barrels:", order_plan)
+    return order_plan
     
 
-    
+# def best_barrels(barrel_lst: list[Barrel]):
+#     sorted(barrel_lst, key=lambda barrel: barrel.ml_per_barrel / barrel.price, reverse=True)
 
+# organizes barrels from smallest to largest, allows to iterate and buy smalls of each color first. 
+def barrel_sizes(wholesale_catalog: list[Barrel]):
+    mini_barrels = []
+    small_barrels = []
+    large_barrels = []
+
+    for barrel in wholesale_catalog:
+        if 'MINI' in barrel.sku:
+            mini_barrels.append(barrel)
+        elif 'SMALL' in barrel.sku:
+            small_barrels.append(barrel)
+        elif 'LARGE' in barrel.sku:
+            large_barrels.append(barrel)
+        else:
+            raise Exception("Rand size.")
+
+    ordered_barrels = mini_barrels + small_barrels + large_barrels
+    print(ordered_barrels)
+    return ordered_barrels   
+
+
+'''
+[Barrel(sku='SMALL_RED_BARREL', ml_per_barrel=500, potion_type=[1, 0, 0, 0], price=100, quantity=10), 
+Barrel(sku='SMALL_GREEN_BARREL', ml_per_barrel=500, potion_type=[0, 1, 0, 0], price=100, quantity=10), 
+Barrel(sku='SMALL_BLUE_BARREL', ml_per_barrel=500, potion_type=[0, 0, 1, 0], price=120, quantity=10), 
+Barrel(sku='MINI_RED_BARREL', ml_per_barrel=200, potion_type=[1, 0, 0, 0], price=60, quantity=1), 
+Barrel(sku='MINI_GREEN_BARREL', ml_per_barrel=200, potion_type=[0, 1, 0, 0], price=60, quantity=1), 
+Barrel(sku='MINI_BLUE_BARREL', ml_per_barrel=200, potion_type=[0, 0, 1, 0], price=60, quantity=1), 
+Barrel(sku='LARGE_DARK_BARREL', ml_per_barrel=10000, potion_type=[0, 0, 0, 1], price=750, quantity=10), 
+Barrel(sku='LARGE_BLUE_BARREL', ml_per_barrel=10000, potion_type=[0, 0, 1, 0], price=600, quantity=30), 
+Barrel(sku='LARGE_GREEN_BARREL', ml_per_barrel=10000, potion_type=[0, 1, 0, 0], price=400, quantity=30), 
+Barrel(sku='LARGE_RED_BARREL', ml_per_barrel=10000, potion_type=[1, 0, 0, 0], price=500, quantity=30)]'''
