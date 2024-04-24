@@ -4,6 +4,8 @@ from src.api import auth
 from enum import Enum
 import sqlalchemy
 from src import database as db
+import random
+import uuid
 
 router = APIRouter(
     prefix="/carts",
@@ -86,21 +88,27 @@ def post_visits(visit_id: int, customers: list[Customer]):
 
 @router.post("/")
 def create_cart(new_cart: Customer):
-    # num = sum(ord(char) for char in Customer.customer_name)
-    """ """
-    return {"cart_id": Customer.level}
+    id = uuid.uuid4() 
+    cart_id = str(id)
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text("INSERT INTO carts (id, customer_name, character_class, level) VALUES (:id, :customer_name, :character_class, :level)"),
+                [{ "id": cart_id, "customer_name": new_cart.customer_name, "character_class": new_cart.character_class, "level": new_cart.level,}]).scalar()
+    
+    return {"cart_id": cart_id}
 
 
 class CartItem(BaseModel):
     quantity: int
 
-cart_dict = {}
-
 # adds items to cart
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     """ """
-    cart_dict[cart_id] = [item_sku, cart_item.quantity]
+    with db.engine.begin() as connection:       
+        connection.execute(
+            sqlalchemy.text("INSERT INTO cart_items (id, potion_sku, quantity) VALUES (:cart_id, :potionId, :quantity)"),
+            [{"cart_id": cart_id, "potionId": item_sku, "quantity": cart_item.quantity}]
+        )
     return "OK"
 
 
@@ -109,21 +117,12 @@ class CartCheckout(BaseModel):
 
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout):
-    gold = 0
     with db.engine.begin() as connection:
-        quant = cart_dict[cart_id][1]
-        if cart_dict[cart_id][0] == "RED_POTION_0":
-            connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_red_potions = num_red_potions - :quant"), {"quant": quant})
-            connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold + 5"))
-            gold = 5
-        elif cart_dict[cart_id][0] == "GREEN_POTION_0":
-            connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_potions = num_green_potions - :quant"),{"quant": quant})
-            connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold + 10"))
-            gold = 10
-        else:
-            connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_blue_potions = num_blue_potions - :quant"),{"quant": quant})
-            connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold + 20"))
-            gold = 20
+        sku = connection.execute(sqlalchemy.text("SELECT potion_sku from cart_items WHERE id = :cart_id"), [{"card_id": cart_id}]).scalar()
+        quant = connection.execute(sqlalchemy.text("SELECT quantity from cart_items WHERE id = :cart_id"), [{"card_id": cart_id}]).scalar()
+        connection.execute(sqlalchemy.text("UPDATE potions WHERE sku= :sku SET quantity = quantity - :quant"), {"sku": sku, "quant": quant})
+       
+        payment = int(cart_checkout.payment)
+        connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold + :payment"), [{"payment": payment}])
 
-
-    return {"total_potions_bought": quant, "total_gold_paid": gold}
+    return {"total_potions_bought": quant, "total_gold_paid": payment}
