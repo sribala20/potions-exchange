@@ -39,13 +39,16 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int
             else:
                 raise Exception("Unidentified potion type.")
             
-            connection.execute(sqlalchemy.text("UPDATE potions WHERE type = :type SET quantity = quantity + :quant"), {"type": potion.potion_type, "quant": potion.quantity})
+            connection.execute(sqlalchemy.text("UPDATE potions SET quantity = quantity + :quant WHERE type = :type"), {"type": potion.potion_type, "quant": potion.quantity})
             
+        total_ml = red_ml+ blue_ml + green_ml
+
         connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_red_ml = num_red_ml - :red_ml"), {"red_ml": red_ml})
         connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_potions = num_potions + :quant"), {"quant": num_potions})
         connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_ml = num_green_ml - :green_ml"), {"green_ml": green_ml}) 
         connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_blue_ml = num_blue_ml - :blue_ml"), {"blue_ml": blue_ml})
-    
+        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_ml = num_ml - :ml"), {"ml": total_ml})
+
     print(f"potions delievered: {potions_delivered} order_id: {order_id}")
 
     return "OK"
@@ -65,9 +68,9 @@ def get_bottle_plan():
         red_ml -= purple_usage
         blue_ml-= purple_usage
 
-        red_potions = red_ml//10
-        green_potions = green_ml//10
-        blue_potions = blue_ml//10
+        red_potions = red_ml//100
+        green_potions = green_ml//100
+        blue_potions = blue_ml//100
     
     return [
             {

@@ -25,7 +25,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
     blue_ml = 0
     green_ml = 0
     price = 0
-    
+
     for barrel in barrels_delivered:
         price += (barrel.price * barrel.quantity)
         if barrel.potion_type == [1,0,0,0]:
@@ -36,7 +36,8 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
             blue_ml += (barrel.ml_per_barrel * barrel.quantity)
         else:
             raise Exception("invalid potion type.")
-        
+    
+    total_ml = red_ml + green_ml + blue_ml
     # + mL, - gold
     with db.engine.begin() as connection:
         # try: insert into processed(job_id, type), values order_id and barrels | except: integrityerror
@@ -46,6 +47,8 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
         {"green_ml": green_ml})
         connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_blue_ml = num_blue_ml + :blue_ml"),
         {"blue_ml": blue_ml})
+        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_ml = num_ml + :ml"),
+        {"ml": total_ml})
         connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold - :price"),
         {"price": price})
             
@@ -74,6 +77,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         gold -= barrel.price
         
     print ("barrels:", order_plan)
+    print("gold", gold)
     return order_plan
     
 
