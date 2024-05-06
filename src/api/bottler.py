@@ -27,18 +27,10 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int
     with db.engine.begin() as connection:
         for potion in potions_delivered:
             num_potions += potion.quantity
-            if potion.potion_type == [100,0,0,0]:
-                red_ml += (potion.quantity * 100)
-            elif potion.potion_type == [0,100,0,0]:
-                green_ml += (potion.quantity * 100)
-            elif potion.potion_type == [0,0,100,0]:
-                blue_ml += (potion.quantity * 100)
-            elif potion.potion_type == [50,0,50,0]:
-                red_ml += (potion.quantity * 50)
-                blue_ml += (potion.quantity * 50)
-            else:
-                raise Exception("Unidentified potion type.")
-            
+            red_ml += (potion.quantity * potion.potion_type[0])
+            green_ml += (potion.quantity * potion.potion_type[1])
+            blue_ml += (potion.quantity * potion.potion_type[1])
+
             connection.execute(sqlalchemy.text("UPDATE potions SET quantity = quantity + :quant WHERE type = :type"), {"type": potion.potion_type, "quant": potion.quantity})
             
         total_ml = red_ml+ blue_ml + green_ml
@@ -62,34 +54,29 @@ def get_bottle_plan():
         red_ml = connection.execute(sqlalchemy.text("SELECT num_red_ml from global_inventory")).scalar()
         green_ml = connection.execute(sqlalchemy.text("SELECT num_green_ml from global_inventory")).scalar()
         blue_ml = connection.execute(sqlalchemy.text("SELECT num_blue_ml from global_inventory")).scalar()
+        potions = connection.execute(sqlalchemy.text("SELECT type FROM potions"))
 
-        purple_usage = min(red_ml//2, blue_ml//2)# mix half of red and blue into purple
-        purple_potions = purple_usage // 50
-        red_ml -= purple_usage
-        blue_ml-= purple_usage
+        plan = []
 
-        red_potions = red_ml//100
-        green_potions = green_ml//100
-        blue_potions = blue_ml//100
-    
-    return [
-            {
-                "potion_type": [100, 0, 0, 0],
-                "quantity": red_potions,
-            }, 
-            {
-                "potion_type": [0, 100, 0, 0],
-                "quantity": green_potions,
-            },
-            {
-                "potion_type": [0, 0, 100, 0],
-                "quantity": blue_potions,
-            },
-            {
-                "potion_type": [50, 0, 50, 0],
-                "quantity": purple_potions,
-            } # is this hardcoding? 
-        ]
+        for potion in potions:
+            make_red = red_ml // potion.type[0]
+            make_green = green_ml // potion.type[1]
+            make_blue = blue_ml // potion.type[2]
+            # make dark
+
+            make = min(make_red, make_green, make_blue)
+            if make > 1:
+                make = make // 2
+
+            plan.append({
+                "potion_type": potion.type,
+                "quantity": make,
+            })
+            red_ml -= potion.type[0] * make
+            green_ml -= potion.type[1] * make
+            blue_ml -= potion.type[1] * make
+
+    return plan
 
     
 if __name__ == "__main__":
