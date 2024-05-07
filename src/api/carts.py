@@ -32,7 +32,7 @@ def search_orders(
 ):
     vars = {}
     sql = """SELECT 
-            cart_items.id, 
+            cart_items.id AS line_item_id, 
             cart_items.potion_sku AS item_sku,
             carts.customer_name AS customer_name,
             potions.price * cart_items.quantity AS line_item_total,
@@ -59,17 +59,35 @@ def search_orders(
     # ex - ORDER BY timestamp DESC
 
     #paging
+    if len(search_page == 0):
+        search_page = 0
+        previous = ""
+    else: 
+        previous = str(search_page) - 1 # no prev when page = 0
+    next = str(int(search_page) + 1)
     offset = int(search_page) * 5 # 0 if page is 0
-    prev_page = ''
-    next_page = ''
+    vars[offset] = "offset"
+    sql += "LIMIT 5 OFFSET :offset"
 
 
     with db.engine.begin() as connection:       
-        connection.execute(
-            sqlalchemy.text("INSERT INTO cart_items (id, potion_sku, quantity) VALUES (:cart_id, :potionId, :quantity)"),
-            [{"cart_id": cart_id, "potionId": item_sku, "quantity": cart_item.quantity}]
-        )
-    return "OK"
+        result = connection.execute(sqlalchemy.text(),[vars])
+    
+    filtered_res = []
+    for row in result:
+        filtered_res.append({
+            "line_item_id": row.line_item_id,
+                "item_sku": row.item_sku,
+                "customer_name": row.customer_name,
+                "line_item_total": row.line_item_total,
+                "timestamp":row.timestamp,  
+        })
+
+    return {
+        "previous": previous,
+        "next": next,
+        "results": filtered_res,
+    }
 
 
     """
