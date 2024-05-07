@@ -59,8 +59,10 @@ def search_orders(
     # ex - ORDER BY timestamp DESC
 
     #paging
-    if len(search_page) == 0:
-        offset = int(search_page) * 5
+    offset = int(search_page) * 5 # 0 if page is 0
+    prev_page = ''
+    next_page = ''
+
 
     with db.engine.begin() as connection:       
         connection.execute(
