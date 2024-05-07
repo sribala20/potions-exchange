@@ -19,8 +19,8 @@ class search_sort_options(str, Enum):
     timestamp = "timestamp"
 
 class search_sort_order(str, Enum):
-    asc = "asc"
-    desc = "desc"   
+    asc = "ASC"
+    desc = "DESC"   
 
 @router.get("/search/", tags=["search"])
 def search_orders(
@@ -30,6 +30,46 @@ def search_orders(
     sort_col: search_sort_options = search_sort_options.timestamp,
     sort_order: search_sort_order = search_sort_order.desc,
 ):
+    vars = {}
+    sql = """SELECT 
+            cart_items.id, 
+            cart_items.potion_sku AS item_sku,
+            carts.customer_name AS customer_name,
+            potions.price * cart_items.quantity AS line_item_total,
+            cart_items.timestamp AS timestamp
+        FROM cart_items
+        JOIN carts ON carts.id = cart_items.id
+        JOIN potions ON potions.sku = cart_items.potion_sku
+    """
+
+    # filter by customer name and potion sku
+    if len(customer_name) > 0:
+        vars['%' + customer_name] = "customer"
+        sql += "WHERE customer_name ILIKE :customer" #ilike helps with pattern matching and filtering, % matches 0+ chars
+    if len(potion_sku) > 0:
+        vars['%' + potion_sku] = "sku"
+        if len(customer_name) == 0:
+            sql += "WHERE item_sku ILIKE :sku"
+        else:
+            sql += "AND item_sku ILIKE :sku"
+
+    # sorting logic
+    print (sort_col)
+    sql +=  " ORDER BY " + sort_col + " " + sort_order + " "
+    # ex - ORDER BY timestamp DESC
+
+    #paging
+    if len(search_page) == 0:
+        offset = int(search_page) * 5
+
+    with db.engine.begin() as connection:       
+        connection.execute(
+            sqlalchemy.text("INSERT INTO cart_items (id, potion_sku, quantity) VALUES (:cart_id, :potionId, :quantity)"),
+            [{"cart_id": cart_id, "potionId": item_sku, "quantity": cart_item.quantity}]
+        )
+    return "OK"
+
+
     """
     Search for cart line items by customer name and/or potion sku.
 
@@ -54,6 +94,8 @@ def search_orders(
     Your results must be paginated, the max results you can return at any
     time is 5 total line items.
     """
+
+    # customer name and potion sku filters 
 
     return {
         "previous": "",
