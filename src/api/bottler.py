@@ -57,9 +57,6 @@ def get_bottle_plan():
     Go from barrel to bottle.
     """
     with db.engine.begin() as connection:
-        """SELECT SUM(change) AS balance
-FROM account_ledger_entries
-WHERE account_id = :bob_account_id;"""
         red_ml = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM ml_ledgers WHERE ml_type = 'red_ml'")).scalar()
         green_ml = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM ml_ledgers WHERE ml_type = 'green_ml'")).scalar()
         blue_ml = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM ml_ledgers WHERE ml_type = 'blue_ml'")).scalar()
