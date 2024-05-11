@@ -18,7 +18,6 @@ class PotionInventory(BaseModel):
 @router.post("/deliver/{order_id}")
 # posts delivery of potions, order_id = value of single delivery
 def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int):
-    num_potions = 0
     red_ml = 0
     green_ml = 0
     blue_ml = 0
@@ -26,21 +25,28 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int
     # - mL, + potions 
     with db.engine.begin() as connection:
         for potion in potions_delivered:
-            num_potions += potion.quantity
             red_ml += (potion.quantity * potion.potion_type[0])
             green_ml += (potion.quantity * potion.potion_type[1])
-            blue_ml += (potion.quantity * potion.potion_type[1])
-
-            connection.execute(sqlalchemy.text("UPDATE potions SET quantity = quantity + :quant WHERE type = :type"), {"type": potion.potion_type, "quant": potion.quantity})
+            blue_ml += (potion.quantity * potion.potion_type[2])
             
-        total_ml = red_ml+ blue_ml + green_ml
+            connection.execute(sqlalchemy.text(
+                    """
+                    INSERT INTO potion_ledger (change, potion_sku, description)
+                    VALUES (
+                        (:quantity, SELECT potion_sku FROM potions WHERE type = :potion_type), 'new potion bottled')
+                    """
+                    ), {"potion_type": potion.potion_type})
+            
 
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_red_ml = num_red_ml - :red_ml"), {"red_ml": red_ml})
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_potions = num_potions + :quant"), {"quant": num_potions})
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_ml = num_green_ml - :green_ml"), {"green_ml": green_ml}) 
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_blue_ml = num_blue_ml - :blue_ml"), {"blue_ml": blue_ml})
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_ml = num_ml - :ml"), {"ml": total_ml})
+        connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
+                                           VALUES ('red_ml', :change, 'red ml used in bottling')'''), {"change": -1* red_ml})
 
+        connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
+                                           VALUES ('blue_ml', :change, 'blue ml used in bottling')'''), {"change": -1 * blue_ml})
+
+        connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
+                                           VALUES ('green_ml', :change, 'green ml used in bottling')'''), {"change": -1* green_ml})
+        
     print(f"potions delievered: {potions_delivered} order_id: {order_id}")
 
     return "OK"
@@ -51,14 +57,17 @@ def get_bottle_plan():
     Go from barrel to bottle.
     """
     with db.engine.begin() as connection:
-        red_ml = connection.execute(sqlalchemy.text("SELECT num_red_ml from global_inventory")).scalar()
-        green_ml = connection.execute(sqlalchemy.text("SELECT num_green_ml from global_inventory")).scalar()
-        blue_ml = connection.execute(sqlalchemy.text("SELECT num_blue_ml from global_inventory")).scalar()
-        potions = connection.execute(sqlalchemy.text("SELECT type FROM potions"))
+        """SELECT SUM(change) AS balance
+FROM account_ledger_entries
+WHERE account_id = :bob_account_id;"""
+        red_ml = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM ml_ledgers WHERE ml_type = 'red_ml'")).scalar()
+        green_ml = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM ml_ledgers WHERE ml_type = 'green_ml'")).scalar()
+        blue_ml = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM ml_ledgers WHERE ml_type = 'blue_ml'")).scalar()
+        potions_catalog = connection.execute(sqlalchemy.text("SELECT type FROM potions"))
 
         plan = []
 
-        for potion in potions:
+        for potion in potions_catalog:
             make_red = red_ml // potion.type[0]
             make_green = green_ml // potion.type[1]
             make_blue = blue_ml // potion.type[2]

@@ -175,16 +175,25 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
 class CartCheckout(BaseModel):
     payment: str
 
+# -potions, +gold
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout):
 
     with db.engine.begin() as connection:
         sku = connection.execute(sqlalchemy.text("SELECT potion_sku from cart_items WHERE id = :cart_id"), [{"cart_id": cart_id}]).scalar()
         quant = connection.execute(sqlalchemy.text("SELECT quantity from cart_items WHERE id = :cart_id"), [{"cart_id": cart_id}]).scalar()
-        connection.execute(sqlalchemy.text("UPDATE potions SET quantity = quantity - :quant WHERE sku= :sku "), {"sku": sku, "quant": quant})
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_potions = num_potions - :quant "), {"quant": quant})
-       
+        
+        connection.execute(sqlalchemy.text(
+                    """
+                    INSERT INTO potion_ledger (change, potion_sku, description)
+                    VALUES (
+                        :quantity, :sku, 'potion sold')
+                    """
+                    ), {"sku": sku, "quantity": quant})
+        
         payment = int(cart_checkout.payment)
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold + :payment"), [{"payment": payment}])
+
+        connection.execute(sqlalchemy.text('''INSERT INTO gold_ledger (change, description)
+                                           VALUES (:change, 'potions sold')'''), {"change": payment})
 
     return {"total_potions_bought": quant, "total_gold_paid": payment}
