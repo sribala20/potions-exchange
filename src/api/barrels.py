@@ -42,17 +42,20 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
     with db.engine.begin() as connection:
         # try: insert into processed(job_id, type), values order_id and barrels | except: integrityerror
         
-        connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
-                                           VALUES ('red_ml', :change, 'red ml added from barrel purchase')'''), {"change": red_ml})
+        if red_ml != 0:
+            connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
+                                            VALUES ('red_ml', :change, 'red ml added from barrel purchase')'''), {"change": red_ml})
 
-        connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
-                                           VALUES ('blue_ml', :change, 'blue ml added from barrel purchase')'''), {"change": blue_ml})
+        if blue_ml != 0:
+            connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
+                                            VALUES ('blue_ml', :change, 'blue ml added from barrel purchase')'''), {"change": blue_ml})
+        if green_ml != 0:
+            connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
+                                            VALUES ('green_ml', :change, 'green ml added from barrel purchase')'''), {"change": green_ml})
 
-        connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
-                                           VALUES ('green_ml', :change, 'green ml added from barrel purchase')'''), {"change": green_ml})
-
-        connection.execute(sqlalchemy.text('''INSERT INTO gold_ledger (change, description)
-                                           VALUES (:change, 'barrel purchases')'''), {"change": -1 * price})
+        if gold != 0:
+            connection.execute(sqlalchemy.text('''INSERT INTO gold_ledger (change, description)
+                                            VALUES (:change, 'barrel purchases')'''), {"change": -1 * price})
             
     print(f"gold_paid: {price}, order_id: {order_id}") 
     return "OK"
@@ -66,14 +69,14 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     ordered_barrels = barrel_sizes(wholesale_catalog)
 
     with db.engine.begin() as connection:
-        # spend half gold on barrels
-        gold = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM gold_ledger")).scalar()//2
+        # spend 100% gold on barrels at start
+        gold = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM gold_ledger")).scalar()
 
     order_plan = []
     for barrel in ordered_barrels:
         if gold < barrel.price:
             break
-        order_plan.append({"sku": barrel.sku, "quantity": 1})
+        order_plan.append({"sku": barrel.sku, "quantity": 1}) #start just buying 1 each
         gold -= barrel.price
         
     print ("barrels:", order_plan)

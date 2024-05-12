@@ -18,14 +18,12 @@ def reset():
     inventory, and all barrels are removed from inventory. Carts are all reset.
     """
 
+    #truncate deletes data within table but not table itself
     with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = 100"))
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_potions = 0"))
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_green_ml = 0"))
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_red_ml = 0"))
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_blue_ml = 0"))
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_ml = 0"))
-        connection.execute(sqlalchemy.text("UPDATE potions SET quantity = 0"))
-
+        connection.execute(sqlalchemy.text("TRUNCATE gold_ledger")) 
+        connection.execute(sqlalchemy.text('''INSERT INTO gold_ledger (change, description)
+                                           VALUES (100, 'reset state')'''))
+        connection.execute(sqlalchemy.text("TRUNCATE ml_ledger")) 
+        connection.execute(sqlalchemy.text("TRUNCATE potion_ledger")) 
     return "OK"
 

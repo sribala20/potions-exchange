@@ -13,7 +13,12 @@ def get_catalog():
     """
     catalog_lst = []
     with db.engine.begin() as connection:
-        stash = connection.execute(sqlalchemy.text("SELECT sku, name, quantity, price, type from potions"))
+        stash = connection.execute(sqlalchemy.text("""SELECT sku, name, price, type, COALESCE(SUM(potion_ledger.change), 0) AS quantity
+                                                   FROM potion_ledger
+                                                   INNER JOIN potions ON potion_ledger.potion_sku = potions.sku
+                                                   GROUP BY potions.sku
+                                                   """)) # gets quantities by sku 
+        
         for row in stash:
             catalog_lst.append(
                 {

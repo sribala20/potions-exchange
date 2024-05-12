@@ -32,21 +32,22 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int
             connection.execute(sqlalchemy.text(
                     """
                     INSERT INTO potion_ledger (change, potion_sku, description)
-                    VALUES (
-                        (:quantity, SELECT potion_sku FROM potions WHERE type = :potion_type), 'new potion bottled')
+                    VALUES (:quantity, 
+                            (SELECT sku FROM potions WHERE type = :potion_type), 
+                            'new potions bottled')
                     """
-                    ), {"potion_type": potion.potion_type})
+                    ), {"potion_type": potion.potion_type,"quantity": potion.quantity})
             
-
-        connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
-                                           VALUES ('red_ml', :change, 'red ml used in bottling')'''), {"change": -1* red_ml})
-
-        connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
-                                           VALUES ('blue_ml', :change, 'blue ml used in bottling')'''), {"change": -1 * blue_ml})
-
-        connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
-                                           VALUES ('green_ml', :change, 'green ml used in bottling')'''), {"change": -1* green_ml})
-        
+        if red_ml != 0:
+            connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
+                                            VALUES ('red_ml', :change, 'red ml used in bottling')'''), {"change": -1* red_ml})
+        if blue_ml != 0:
+            connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
+                                            VALUES ('blue_ml', :change, 'blue ml used in bottling')'''), {"change": -1 * blue_ml})
+        if green_ml != 0:
+            connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
+                                            VALUES ('green_ml', :change, 'green ml used in bottling')'''), {"change": -1* green_ml})
+            
     print(f"potions delievered: {potions_delivered} order_id: {order_id}")
 
     return "OK"
@@ -57,30 +58,48 @@ def get_bottle_plan():
     Go from barrel to bottle.
     """
     with db.engine.begin() as connection:
-        red_ml = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM ml_ledgers WHERE ml_type = 'red_ml'")).scalar()
-        green_ml = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM ml_ledgers WHERE ml_type = 'green_ml'")).scalar()
-        blue_ml = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM ml_ledgers WHERE ml_type = 'blue_ml'")).scalar()
+        red_ml = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM ml_ledger WHERE ml_type = 'red_ml'")).scalar()
+        green_ml = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM ml_ledger WHERE ml_type = 'green_ml'")).scalar()
+        blue_ml = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM ml_ledger WHERE ml_type = 'blue_ml'")).scalar()
         potions_catalog = connection.execute(sqlalchemy.text("SELECT type FROM potions"))
 
         plan = []
 
         for potion in potions_catalog:
-            make_red = red_ml // potion.type[0]
-            make_green = green_ml // potion.type[1]
-            make_blue = blue_ml // potion.type[2]
+            try:
+                make_red = red_ml // potion.type[0]
+            except ZeroDivisionError:
+                make_red = 0
+                print("Cannot divide by zero for make_red.")
+                
+            try:
+                make_green = green_ml // potion.type[1]
+            except ZeroDivisionError:
+                make_green = 0
+                print("Cannot divide by zero for make_green.")
+                
+            try:
+                make_blue = blue_ml // potion.type[2]
+            except ZeroDivisionError:
+                make_blue = 0
+                print("Cannot divide by zero for make_blue.")
+
             # make dark
+            print(make_red, make_green, make_blue)
 
-            make = min(make_red, make_green, make_blue)
-            if make > 1:
-                make = make // 2
+            make = max(make_red, make_green, make_blue)
+            # if make > 1:
+            #     make = make // 2
 
-            plan.append({
-                "potion_type": potion.type,
-                "quantity": make,
-            })
+            if make > 0:
+                plan.append({
+                    "potion_type": potion.type,
+                    "quantity": make,
+                })
+
             red_ml -= potion.type[0] * make
             green_ml -= potion.type[1] * make
-            blue_ml -= potion.type[1] * make
+            blue_ml -= potion.type[2] * make
 
     return plan
 

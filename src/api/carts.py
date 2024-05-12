@@ -149,11 +149,11 @@ def post_visits(visit_id: int, customers: list[Customer]):
 
 @router.post("/")
 def create_cart(new_cart: Customer):
-    cart_id = random.randint(0,1000000000)
     with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text("INSERT INTO carts (id, customer_name, character_class, level) VALUES (:id, :customer_name, :character_class, :level)"),
-                [{ "id": cart_id, "customer_name": new_cart.customer_name, "character_class": new_cart.character_class, "level": new_cart.level}])
+        cart_id = connection.execute(sqlalchemy.text("INSERT INTO carts (customer_name, character_class, level) VALUES (:customer_name, :character_class, :level) RETURNING id"),
+                [{"customer_name": new_cart.customer_name, "character_class": new_cart.character_class, "level": new_cart.level}]).scalar()
     
+    print(f"cart_id: {cart_id} customer_name: {new_cart.customer_name} character_class: {new_cart.character_class} level: {new_cart.level}")
     return {"cart_id": cart_id}
 
 
@@ -189,7 +189,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                     VALUES (
                         :quantity, :sku, 'potion sold')
                     """
-                    ), {"sku": sku, "quantity": quant})
+                    ), {"sku": sku, "quantity": -1 * quant})
         
         payment = int(cart_checkout.payment)
 
