@@ -58,51 +58,48 @@ def get_bottle_plan():
     Go from barrel to bottle.
     """
     with db.engine.begin() as connection:
-        red_ml = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM ml_ledger WHERE ml_type = 'red_ml'")).scalar()
-        green_ml = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM ml_ledger WHERE ml_type = 'green_ml'")).scalar()
-        blue_ml = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM ml_ledger WHERE ml_type = 'blue_ml'")).scalar()
+        red_ml = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM ml_ledger WHERE ml_type = 'red_ml'")).scalar()
+        green_ml = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM ml_ledger WHERE ml_type = 'green_ml'")).scalar()
+        blue_ml = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM ml_ledger WHERE ml_type = 'blue_ml'")).scalar()
         potions_catalog = connection.execute(sqlalchemy.text("SELECT type FROM potions"))
 
+        ml_dict = {}
+        ml_dict[0] = red_ml
+        ml_dict[1] = green_ml
+        ml_dict[2] = blue_ml
+        ml_dict[3] = 0
+
         plan = []
+        # return [i for i, val in enumerate(arr) if val != 0]
 
         for potion in potions_catalog:
-            try:
-                make_red = red_ml // potion.type[0]
-            except ZeroDivisionError:
-                make_red = 0
-                print("Cannot divide by zero for make_red.")
-                
-            try:
-                make_green = green_ml // potion.type[1]
-            except ZeroDivisionError:
-                make_green = 0
-                print("Cannot divide by zero for make_green.")
-                
-            try:
-                make_blue = blue_ml // potion.type[2]
-            except ZeroDivisionError:
-                make_blue = 0
-                print("Cannot divide by zero for make_blue.")
+            make = []
+            mls = []
+            for i in range(len(potion.type)):
+                if potion.type[i] > 0: # doesn't add makes unless it is in the potion
+                    make.append(ml_dict[i]//potion.type[i]) 
+                    mls.append(i)
+                        
+            quant = min(make)
 
-            # make dark
-            print(make_red, make_green, make_blue)
+            print(ml_dict, make, quant)
 
-            make = max(make_red, make_green, make_blue)
-            # if make > 1:
-            #     make = make // 2
-
-            if make > 0:
+            if quant > 0:
                 plan.append({
                     "potion_type": potion.type,
-                    "quantity": make,
+                    "quantity": quant,
                 })
-
-            red_ml -= potion.type[0] * make
-            green_ml -= potion.type[1] * make
-            blue_ml -= potion.type[2] * make
+            
+            for ml in mls:
+                ml_dict[ml] -= potion.type[ml] * quant
 
     return plan
 
+'''
+200 redml 0 blue 0 green
+[50,0,50,0] -> redml//50 = 4, blueml//50 = 0
+quant = min 
+'''
     
 if __name__ == "__main__":
     print(get_bottle_plan())
