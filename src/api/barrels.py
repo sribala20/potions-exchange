@@ -53,7 +53,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
             connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
                                             VALUES ('green_ml', :change, 'green ml added from barrel purchase')'''), {"change": green_ml})
 
-        if gold != 0:
+        if price != 0:
             connection.execute(sqlalchemy.text('''INSERT INTO gold_ledger (change, description)
                                             VALUES (:change, 'barrel purchases')'''), {"change": -1 * price})
             
