@@ -19,7 +19,10 @@ def get_catalog():
                                                    GROUP BY potions.sku
                                                    """)) # gets quantities by sku 
         
+        limit = 0
         for row in stash:
+            limit += 1
+            if limit == 7: break
             catalog_lst.append(
                 {
                     "sku": row.sku,
