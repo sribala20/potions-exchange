@@ -66,12 +66,11 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     print(wholesale_catalog)
 
-    ordered_barrels = barrel_sizes(wholesale_catalog)
-
     with db.engine.begin() as connection:
         # spend 100% gold on barrels at start
         gold = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM gold_ledger")).scalar()
         #gold = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM gold_ledger")).scalar()
+        ordered_barrels = barrel_sizes(wholesale_catalog, gold)
 
     order_plan = []
     for barrel in ordered_barrels:
@@ -89,7 +88,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 #     sorted(barrel_lst, key=lambda barrel: barrel.ml_per_barrel / barrel.price, reverse=True)
 
 # organizes barrels from smallest to largest, allows to iterate and buy smalls of each color first. 
-def barrel_sizes(wholesale_catalog: list[Barrel]):
+def barrel_sizes(wholesale_catalog: list[Barrel], gold):
     mini_barrels = []
     small_barrels = []
     med_barrels = []
@@ -97,9 +96,15 @@ def barrel_sizes(wholesale_catalog: list[Barrel]):
 
     for barrel in wholesale_catalog:
         if 'MINI' in barrel.sku:
-            mini_barrels.append(barrel)
+            if gold >= 100:
+                continue
+            else:
+                mini_barrels.append(barrel)
         elif 'SMALL' in barrel.sku:
-            small_barrels.append(barrel)
+            if gold >= 250:
+                continue
+            else:
+                small_barrels.append(barrel)
         elif 'MEDIUM' in barrel.sku:
             med_barrels.append(barrel)
         elif 'LARGE' in barrel.sku:
