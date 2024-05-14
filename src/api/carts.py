@@ -191,7 +191,9 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                     """
                     ), {"sku": sku, "quantity": -1 * quant})
         
-        payment = int(cart_checkout.payment)
+        price = connection.execute(sqlalchemy.text("SELECT price from potions WHERE sku = :sku"), [{"sku": sku}]).scalar()
+
+        payment = price * quant
 
         connection.execute(sqlalchemy.text('''INSERT INTO gold_ledger (change, description)
                                            VALUES (:change, 'potions sold')'''), {"change": payment})
