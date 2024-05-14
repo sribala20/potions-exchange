@@ -101,7 +101,7 @@ def barrel_sizes(wholesale_catalog: list[Barrel], gold):
             else:
                 mini_barrels.append(barrel)
         elif 'SMALL' in barrel.sku:
-            if gold >= 250:
+            if gold > 250:
                 continue
             else:
                 small_barrels.append(barrel)
