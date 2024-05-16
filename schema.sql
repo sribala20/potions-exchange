@@ -24,18 +24,6 @@ create table
     constraint potions_sku_key unique (sku)
   ) tablespace pg_default;
 
-insert into potions (sku, price, type) 
-values ('GREEN_POTION_0', 50, [0, 100, 0, 0]);
-
-insert into potions (sku, price, type) 
-values ('RED_POTION_0', 50, [100, 0, 0, 0]);
-
-insert into potions (sku, price, type) 
-values ('BLUE_POTION_0', 50, [0, 0, 100, 0]);
-
-insert into potions (sku, price, type) 
-values ('PURPLE_POTION_0', 50, [50, 0, 50, 0]);
-
 create table
   public.carts (
     customer_name text not null,

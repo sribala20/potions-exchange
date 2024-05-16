@@ -70,6 +70,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         # spend 100% gold on barrels at start
         gold = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM gold_ledger")).scalar()
         #gold = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM gold_ledger")).scalar()
+        gold = gold * .5
         ordered_barrels = barrel_sizes(wholesale_catalog, gold)
 
     order_plan = []
