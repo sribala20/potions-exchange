@@ -19,7 +19,7 @@ def get_inventory():
         num_ml = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM ml_ledger")).scalar()
         gold = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM gold_ledger")).scalar()
 
-    
+    print(f"potions: {num_potions} ml: {num_ml} gold: {gold}")
     return {"number_of_potions": num_potions, "ml_in_barrels": num_ml, "gold": gold}
 
 # Gets called once a day
@@ -29,10 +29,15 @@ def get_capacity_plan():
     Start with 1 capacity for 50 potions and 1 capacity for 10000 ml of potion. Each additional 
     capacity unit costs 1000 gold.
     """
+    with db.engine.begin() as connection:
+        gold = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM gold_ledger")).scalar()
+    if gold >= 1000:
+        cap = 1
+
 
     return {
-        "potion_capacity": 0,
-        "ml_capacity": 0
+        "potion_capacity": cap,
+        "ml_capacity": cap
         }
 
 class CapacityPurchase(BaseModel):

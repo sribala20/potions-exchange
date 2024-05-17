@@ -113,6 +113,6 @@ def barrel_sizes(wholesale_catalog: list[Barrel], gold):
         else:
             raise Exception("Random size.")
 
-    ordered_barrels = mini_barrels + small_barrels + med_barrels + large_barrels
+    ordered_barrels = med_barrels + large_barrels
     print(ordered_barrels)
     return ordered_barrels   
