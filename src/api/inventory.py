@@ -31,8 +31,8 @@ def get_capacity_plan():
     """
     with db.engine.begin() as connection:
         gold = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM gold_ledger")).scalar()
-    if gold >= 1000:
-        cap = 1
+    g = 0.5 * gold
+    cap = g // 1000
 
 
     return {
@@ -47,6 +47,11 @@ class CapacityPurchase(BaseModel):
 # Gets called once a day
 @router.post("/deliver/{order_id}")
 def deliver_capacity_plan(capacity_purchase : CapacityPurchase, order_id: int):
+    if capacity_purchase.potion_capacity > 0 and capacity_purchase.ml_capacity > 0:
+        payment = (-1000 * capacity_purchase.potion_capacity + -1000 * capacity_purchase.ml_capacity)
+        with db.engine.begin() as connection:
+            connection.execute(sqlalchemy.text('''INSERT INTO gold_ledger (change, description)
+                                           VALUES (:change, 'capacity purchased')'''), {"change": payment})
     """ 
     Start with 1 capacity for 50 potions and 1 capacity for 10000 ml of potion. Each additional 
     capacity unit costs 1000 gold.
