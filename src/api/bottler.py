@@ -71,7 +71,7 @@ def get_bottle_plan():
 
         plan = []
         # return [i for i, val in enumerate(arr) if val != 0]
-
+        print(ml_dict)
         for potion in potions_catalog:
             make = []
             mls = []
@@ -79,10 +79,12 @@ def get_bottle_plan():
                 if potion.type[i] > 0: # doesn't add makes unless it is in the potion
                     make.append(ml_dict[i]//potion.type[i]) 
                     mls.append(i)
-                        
+                        # red = 268 ml for all, #green = 184 # blue = 248
             quant = min(make)
+            if quant > 3:
+                quant = quant // 3
 
-            print(ml_dict, make, quant)
+            print(potion.type, make, quant)
 
             if quant > 0:
                 plan.append({
@@ -93,6 +95,7 @@ def get_bottle_plan():
             for ml in mls:
                 ml_dict[ml] -= potion.type[ml] * quant
 
+    print(ml_dict)
     return plan
 
 '''
