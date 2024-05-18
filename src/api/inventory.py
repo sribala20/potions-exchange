@@ -21,7 +21,7 @@ def get_inventory():
 
         connection.execute(sqlalchemy.text("""UPDATE global_inventory SET num_potions = :potions"""),
                                     {'potions' : num_potions})
-        connection.execute(sqlalchemy.text("""UPDATE global_inventory SET gold = :gold"""),
+        connection.execute(sqlalchemy.text("""UPDATE global_inventory SET num_gold = :gold"""),
                                     {'gold' : gold})
         connection.execute(sqlalchemy.text("""UPDATE global_inventory SET num_ml = :num_ml"""),
                                     {'num_ml' : num_ml})
