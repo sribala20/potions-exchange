@@ -31,5 +31,7 @@ def get_catalog():
                     "price": row.price,
                     "potion_type": row.type,
                 })
+            
+    print(catalog_lst)
     
     return catalog_lst
