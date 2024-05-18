@@ -23,14 +23,15 @@ def get_catalog():
         for row in stash:
             limit += 1
             if limit == 6: break
-            catalog_lst.append(
-                {
-                    "sku": row.sku,
-                    "name": row.name,
-                    "quantity": row.quantity,
-                    "price": row.price,
-                    "potion_type": row.type,
-                })
+            if row.quantity > 0:
+                catalog_lst.append(
+                    {
+                        "sku": row.sku,
+                        "name": row.name,
+                        "quantity": row.quantity,
+                        "price": row.price,
+                        "potion_type": row.type,
+                    })
             
     print(catalog_lst)
     
