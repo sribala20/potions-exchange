@@ -49,7 +49,7 @@ def get_capacity_plan():
         
         # check if potions or ml is over 90% current capacity, buys if there is enough gold.
         if g > 1000:
-            if num_potions >= 0.9(curr_pot_cap):
+            if num_potions >= round(0.9 * curr_pot_cap):
                 pot_cap += 1
                 g -= 1000
 
@@ -82,5 +82,5 @@ def deliver_capacity_plan(capacity_purchase : CapacityPurchase, order_id: int):
     Start with 1 capacity for 50 potions and 1 capacity for 10000 ml of potion. Each additional 
     capacity unit costs 1000 gold.
     """
-    
+
     return "OK"
