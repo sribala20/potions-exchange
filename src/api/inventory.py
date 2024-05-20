@@ -47,14 +47,14 @@ def get_capacity_plan():
         ml_cap = 0
         g = 0.5 * gold # spend only 1/2 on capacity
         
-        # check if potions or ml is over 90% current capacity, buys if there is enough gold.
+        # check if potions or ml is over 95% current capacity, buys if there is enough gold.
         if g > 1000:
-            if num_potions >= round(0.9 * curr_pot_cap):
+            if num_potions >= round(0.95 * curr_pot_cap):
                 pot_cap = 1
                 g -= 1000
 
         if g > 1000:
-            if num_ml >= round(0.9 * curr_ml_cap):
+            if num_ml >= round(0.95 * curr_ml_cap):
                 ml_cap = 1
                 pot_cap = 0
             
@@ -71,13 +71,20 @@ class CapacityPurchase(BaseModel):
 # Gets called once a day
 @router.post("/deliver/{order_id}")
 def deliver_capacity_plan(capacity_purchase : CapacityPurchase, order_id: int):
-    if capacity_purchase.potion_capacity > 0 and capacity_purchase.ml_capacity > 0:
-        payment = (-1000 * capacity_purchase.potion_capacity + -1000 * capacity_purchase.ml_capacity)
-        with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text('''INSERT INTO gold_ledger (change, description)
-                                           VALUES (:change, 'capacity purchased')'''), {"change": payment})
+    with db.engine.begin() as connection:
+        payment = 0
+        if capacity_purchase.potion_capacity > 0:
+            payment += (-1000 * capacity_purchase.potion_capacity + -1000 * capacity_purchase.ml_capacity)
             connection.execute(sqlalchemy.text("""UPDATE global_inventory SET curr_pot_cap = curr_pot_cap + 1000 """))
+        
+        if capacity_purchase.ml_capacity > 0:
+            payment += (-1000 * capacity_purchase.ml_capacity)
             connection.execute(sqlalchemy.text("""UPDATE global_inventory SET curr_ml_cap = curr_ml_cap + 10000"""))
+
+        
+        connection.execute(sqlalchemy.text('''INSERT INTO gold_ledger (change, description)
+                                        VALUES (:change, 'capacity purchased')'''), {"change": payment})
+        
        
     """ 
     Start with 1 capacity for 50 potions and 1 capacity for 10000 ml of potion. Each additional 
