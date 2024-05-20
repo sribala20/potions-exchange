@@ -54,7 +54,7 @@ def get_capacity_plan():
                 g -= 1000
 
         if g > 1000:
-            if num_ml >= 0.9(curr_ml_cap):
+            if num_ml >= round(0.9 * curr_ml_cap):
                 ml_cap += 1
             
 
