@@ -70,6 +70,7 @@ def get_bottle_plan():
         ml_dict[3] = 0
 
         plan = []
+        capacity = 50
         # return [i for i, val in enumerate(arr) if val != 0]
         print(ml_dict)
         for potion in potions_catalog:
@@ -84,6 +85,9 @@ def get_bottle_plan():
             if quant > 3:
                 quant = quant // 3
 
+            if capacity <= 0:
+                break
+            
             print(potion.type, make, quant)
 
             if quant > 0:
@@ -94,6 +98,8 @@ def get_bottle_plan():
             
             for ml in mls:
                 ml_dict[ml] -= potion.type[ml] * quant
+            
+            capacity -= quant
 
     print(ml_dict)
     return plan
