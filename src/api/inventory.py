@@ -50,12 +50,13 @@ def get_capacity_plan():
         # check if potions or ml is over 90% current capacity, buys if there is enough gold.
         if g > 1000:
             if num_potions >= round(0.9 * curr_pot_cap):
-                pot_cap += 1
+                pot_cap = 1
                 g -= 1000
 
         if g > 1000:
             if num_ml >= round(0.9 * curr_ml_cap):
-                ml_cap += 1
+                ml_cap = 1
+                pot_cap = 0
             
 
     return {
