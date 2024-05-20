@@ -71,16 +71,15 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         gold = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM gold_ledger")).scalar()
         #gold = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM gold_ledger")).scalar()
      
-        #gold = gold * .5
+        gold = gold * .3
         ordered_barrels = barrel_sizes(wholesale_catalog, gold)
 
     order_plan = []
     for barrel in ordered_barrels:
-        if 'BLUE' in barrel.sku:
-            if gold < barrel.price:
-                break
-            order_plan.append({"sku": barrel.sku, "quantity": 1}) #start just buying 1 each
-            gold -= barrel.price 
+        if gold < barrel.price:
+            break
+        order_plan.append({"sku": barrel.sku, "quantity": 1}) #start just buying 1 each
+        gold -= barrel.price 
             
         
     print ("barrels:", order_plan)
@@ -103,16 +102,16 @@ def barrel_sizes(wholesale_catalog: list[Barrel], gold):
             if gold >= 100:
                 continue
             else:
-                mini_barrels.append(barrel)
+                mini_barrels.append(barrel) 
         elif 'SMALL' in barrel.sku:
-            if gold > 500:
+            if gold >= 500:
                 continue
             else:
-                small_barrels.append(barrel)
+                small_barrels.append(barrel) 
         elif 'MEDIUM' in barrel.sku:
-            med_barrels.append(barrel)
+            med_barrels.append(barrel) 
         elif 'LARGE' in barrel.sku:
-            large_barrels.append(barrel)
+            large_barrels.append(barrel) 
         else:
             raise Exception("Random size.")
 
