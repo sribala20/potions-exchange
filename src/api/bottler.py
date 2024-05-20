@@ -85,9 +85,11 @@ def get_bottle_plan():
             if quant > 3:
                 quant = quant // 3
 
+            capacity -= quant
+            
             if capacity <= 0:
                 break
-            
+
             print(potion.type, make, quant)
 
             if quant > 0:
@@ -99,7 +101,7 @@ def get_bottle_plan():
             for ml in mls:
                 ml_dict[ml] -= potion.type[ml] * quant
             
-            capacity -= quant
+            
 
     print(ml_dict)
     return plan
