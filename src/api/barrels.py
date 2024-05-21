@@ -25,6 +25,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
     red_ml = 0
     blue_ml = 0
     green_ml = 0
+    dark_ml = 0
     price = 0
 
     for barrel in barrels_delivered:
@@ -35,6 +36,8 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
             green_ml += (barrel.ml_per_barrel * barrel.quantity)
         elif barrel.potion_type == [0,0,1,0]:
             blue_ml += (barrel.ml_per_barrel * barrel.quantity)
+        elif barrel.potion_type == [0,0,0,1]:
+            dark_ml += (barrel.ml_per_barrel * barrel.quantity)
         else:
             raise Exception("invalid potion type.")
         
@@ -52,6 +55,10 @@ def post_deliver_barrels(barrels_delivered: list[Barrel], order_id: int):
         if green_ml != 0:
             connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
                                             VALUES ('green_ml', :change, 'green ml added from barrel purchase')'''), {"change": green_ml})
+
+        if dark_ml != 0:
+            connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
+                                            VALUES ('dark_ml', :change, 'dark ml added from barrel purchase')'''), {"change": dark_ml})
 
         if price != 0:
             connection.execute(sqlalchemy.text('''INSERT INTO gold_ledger (change, description)

@@ -21,6 +21,7 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int
     red_ml = 0
     green_ml = 0
     blue_ml = 0
+    dark_ml = 0
 
     # - mL, + potions 
     with db.engine.begin() as connection:
@@ -28,7 +29,8 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int
             red_ml += (potion.quantity * potion.potion_type[0])
             green_ml += (potion.quantity * potion.potion_type[1])
             blue_ml += (potion.quantity * potion.potion_type[2])
-            
+            dark_ml += (potion.quantity * potion.potion_type[3])
+
             connection.execute(sqlalchemy.text(
                     """
                     INSERT INTO potion_ledger (change, potion_sku, description)
@@ -47,6 +49,9 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory], order_id: int
         if green_ml != 0:
             connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
                                             VALUES ('green_ml', :change, 'green ml used in bottling')'''), {"change": -1* green_ml})
+        if dark_ml != 0:
+            connection.execute(sqlalchemy.text('''INSERT INTO ml_ledger (ml_type, change, description)
+                                            VALUES ('dark_ml', :change, 'dark ml used in bottling')'''), {"change": -1* dark_ml})
             
     print(f"potions delievered: {potions_delivered} order_id: {order_id}")
 
@@ -61,6 +66,7 @@ def get_bottle_plan():
         red_ml = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM ml_ledger WHERE ml_type = 'red_ml'")).scalar()
         green_ml = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM ml_ledger WHERE ml_type = 'green_ml'")).scalar()
         blue_ml = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM ml_ledger WHERE ml_type = 'blue_ml'")).scalar()
+        dark_ml = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM ml_ledger WHERE ml_type = 'dark_ml'")).scalar()
         potions_catalog = connection.execute(sqlalchemy.text("SELECT type FROM potions"))
         
         curr_pot_cap = connection.execute(sqlalchemy.text("SELECT curr_pot_cap FROM global_inventory")).scalar()
@@ -70,7 +76,7 @@ def get_bottle_plan():
         ml_dict[0] = red_ml
         ml_dict[1] = green_ml
         ml_dict[2] = blue_ml
-        ml_dict[3] = 0
+        ml_dict[3] = dark_ml
 
         plan = []
         capacity = curr_pot_cap - num_potions
