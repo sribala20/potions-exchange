@@ -78,11 +78,12 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
     order_plan = []
     for barrel in ordered_barrels:
-        if gold < barrel.price:
-            break
-        capacity -= barrel.quantity 
-        if capacity < 0:
-            break
+        if 'BLUE' in barrel.sku:    
+            if gold < barrel.price:
+                break
+            capacity -= barrel.quantity 
+            if capacity < 0:
+                break
         order_plan.append({"sku": barrel.sku, "quantity": 1}) #start just buying 1 each
         gold -= barrel.price
         
@@ -121,6 +122,6 @@ def barrel_sizes(wholesale_catalog: list[Barrel], gold):
         else:
             raise Exception("Random size.")
 
-    ordered_barrels = med_barrels + large_barrels
+    ordered_barrels = large_barrels
     print(ordered_barrels)
     return ordered_barrels   
