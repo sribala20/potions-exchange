@@ -78,7 +78,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
     order_plan = []
     for barrel in ordered_barrels:
-        if 'BLUE' in barrel.sku:    
+        if 'RED' not in barrel.sku:    
             if gold < barrel.price:
                 break
             capacity -= barrel.quantity 

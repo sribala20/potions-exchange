@@ -63,8 +63,8 @@ def get_capacity_plan():
             ml_cap = 1
 
     return {
-        "potion_capacity": pot_cap,
-        "ml_capacity": ml_cap
+        "potion_capacity": 0,
+        "ml_capacity": 0
         }
 
 class CapacityPurchase(BaseModel):
@@ -78,7 +78,7 @@ def deliver_capacity_plan(capacity_purchase : CapacityPurchase, order_id: int):
         payment = 0
         if capacity_purchase.potion_capacity > 0:
             payment += (-1000 * capacity_purchase.potion_capacity + -1000 * capacity_purchase.ml_capacity)
-            connection.execute(sqlalchemy.text("""UPDATE global_inventory SET curr_pot_cap = curr_pot_cap + 1000 """))
+            connection.execute(sqlalchemy.text("""UPDATE global_inventory SET curr_pot_cap = curr_pot_cap + 50 """))
         
         if capacity_purchase.ml_capacity > 0:
             payment += (-1000 * capacity_purchase.ml_capacity)
