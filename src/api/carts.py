@@ -59,7 +59,7 @@ def search_orders(
     # ex - ORDER BY timestamp DESC
 
     #paging
-    if len(search_page == 0):
+    if len(search_page) == 0:
         search_page = 0
         previous = ""
     else: 
