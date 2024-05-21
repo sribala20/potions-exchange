@@ -69,8 +69,10 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     with db.engine.begin() as connection:
         # spend 100% gold on barrels at start
         gold = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM gold_ledger")).scalar()
-        #gold = connection.execute(sqlalchemy.text("SELECT SUM(change) FROM gold_ledger")).scalar()
-     
+        curr_ml_cap = connection.execute(sqlalchemy.text("SELECT curr_ml_cap FROM global_inventory")).scalar()
+        num_ml = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM ml_ledger")).scalar()
+
+        capacity = curr_ml_cap - num_ml
         gold = gold * .1
         ordered_barrels = barrel_sizes(wholesale_catalog, gold)
 
@@ -78,8 +80,12 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     for barrel in ordered_barrels:
         if gold < barrel.price:
             break
+        capacity -= barrel.quantity 
+        if capacity < 0:
+            break
         order_plan.append({"sku": barrel.sku, "quantity": 1}) #start just buying 1 each
-        gold -= barrel.price 
+        gold -= barrel.price
+        
             
         
     print ("barrels:", order_plan)
