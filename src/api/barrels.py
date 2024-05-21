@@ -73,7 +73,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         num_ml = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM ml_ledger")).scalar()
 
         capacity = curr_ml_cap - num_ml
-        gold = gold * .1
+        gold = gold * .2
         ordered_barrels = barrel_sizes(wholesale_catalog, gold)
 
     order_plan = []
