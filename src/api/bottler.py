@@ -62,6 +62,7 @@ def get_bottle_plan():
         green_ml = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM ml_ledger WHERE ml_type = 'green_ml'")).scalar()
         blue_ml = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM ml_ledger WHERE ml_type = 'blue_ml'")).scalar()
         potions_catalog = connection.execute(sqlalchemy.text("SELECT type FROM potions"))
+        num_potions = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM potion_ledger")).scalar()
 
         ml_dict = {}
         ml_dict[0] = red_ml
@@ -70,7 +71,7 @@ def get_bottle_plan():
         ml_dict[3] = 0
 
         plan = []
-        capacity = 50
+        capacity = 50 - num_potions
         # return [i for i, val in enumerate(arr) if val != 0]
         print(ml_dict)
         for potion in potions_catalog:
@@ -86,7 +87,7 @@ def get_bottle_plan():
                 quant = quant // 3
 
             capacity -= quant
-            
+
             if capacity <= 0:
                 break
 
