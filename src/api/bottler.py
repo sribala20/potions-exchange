@@ -123,3 +123,6 @@ quant = min
     
 if __name__ == "__main__":
     print(get_bottle_plan())
+
+
+    
