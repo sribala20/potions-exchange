@@ -91,7 +91,7 @@ def get_bottle_plan():
                     make.append(ml_dict[i]//potion.type[i]) 
                     mls.append(i)
                         # red = 268 ml for all, #green = 184 # blue = 248
-                        
+            quant = min(make)
             quant = min(capacity, quant)
             
             if quant > 4:
