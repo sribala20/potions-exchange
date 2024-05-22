@@ -107,7 +107,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     
 def barrel_sizes(wholesale_catalog):
     # Filter only medium and large barrels
-    filtered_barrels = [barrel for barrel in wholesale_catalog if 'MEDIUM' in barrel.sku or 'LARGE' in barrel.sku]
+    filtered_barrels = [barrel for barrel in wholesale_catalog if 'SMALL' in barrel.sku or 'MEDIUM' in barrel.sku or 'LARGE' in barrel.sku]
     # Sort barrels by size and price priority
     ordered_barrels = sorted(
         filtered_barrels,
