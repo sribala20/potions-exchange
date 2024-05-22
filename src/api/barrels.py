@@ -86,7 +86,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         ordered_barrels = barrel_sizes(wholesale_catalog)
 
     order_plan = []
-    potion_colors = {"RED": False, "GREEN": False, "BLUE": False, "DARK": False}
+    potion_colors = {"RED": False, "GREEN": False, "BLUE": False, "DARK": True}
     
     for barrel in ordered_barrels:
         if g >= barrel.price:
