@@ -80,55 +80,37 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         num_ml = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM ml_ledger")).scalar()
 
         capacity = curr_ml_cap - num_ml
-        gold = gold * .5
+        g = gold * .25
         ordered_barrels = barrel_sizes(wholesale_catalog, gold)
 
     order_plan = []
+    potion_colors = {"RED": False, "GREEN": False, "BLUE": False, "DARK": False}
+    
     for barrel in ordered_barrels:
-        if 'RED' not in barrel.sku:    
-            if gold < barrel.price:
-                break
-            capacity -= barrel.quantity 
-            if capacity < 0:
-                break
-        order_plan.append({"sku": barrel.sku, "quantity": 1}) #start just buying 1 each
-        gold -= barrel.price
-        
-            
-        
-    print ("barrels:", order_plan)
-    print("gold", gold)
+        if g >= barrel.price:
+            # Check if the barrel is a new color type
+            for color in potion_colors:
+                if color in barrel.sku and not potion_colors[color]:
+                    potion_colors[color] = True
+                    capacity -= barrel.ml_per_barrel 
+                    if capacity < 0:
+                        break
+                    order_plan.append({"sku": barrel.sku, "quantity": 1})
+                    g -= barrel.price
+                    break  # Move to the next barrel after buying one of a new color
+
+    print("barrels:", order_plan)
+    print("gold left:", g)
     return order_plan
     
-
-# def best_barrels(barrel_lst: list[Barrel]):
-#     sorted(barrel_lst, key=lambda barrel: barrel.ml_per_barrel / barrel.price, reverse=True)
-
-# organizes barrels from smallest to largest, allows to iterate and buy smalls of each color first. 
-def barrel_sizes(wholesale_catalog: list[Barrel], gold):
-    mini_barrels = []
-    small_barrels = []
-    med_barrels = []
-    large_barrels = []
-
-    for barrel in wholesale_catalog:
-        if 'MINI' in barrel.sku:
-            if gold >= 100:
-                continue
-            else:
-                mini_barrels.append(barrel) 
-        elif 'SMALL' in barrel.sku:
-            if gold >= 500:
-                continue
-            else:
-                small_barrels.append(barrel) 
-        elif 'MEDIUM' in barrel.sku:
-            med_barrels.append(barrel) 
-        elif 'LARGE' in barrel.sku:
-            large_barrels.append(barrel) 
-        else:
-            raise Exception("Random size.")
-
-    ordered_barrels = med_barrels + large_barrels
-    print(ordered_barrels)
-    return ordered_barrels   
+def barrel_sizes(wholesale_catalog):
+    # Filter only medium and large barrels
+    filtered_barrels = [barrel for barrel in wholesale_catalog if 'MEDIUM' in barrel.sku or 'LARGE' in barrel.sku]
+    # Sort barrels by size and price priority
+    ordered_barrels = sorted(
+        filtered_barrels,
+        key=lambda x: (x.ml_per_barrel, x.price),
+        reverse=True
+    )
+    print("ordering", ordered_barrels)
+    return ordered_barrels     
