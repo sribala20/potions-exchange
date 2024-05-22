@@ -57,10 +57,6 @@ def get_capacity_plan():
         #     if num_ml >= round(0.95 * curr_ml_cap):
         #         ml_cap = 1
         #         pot_cap = 0
-            
-        if gold > 2000:
-            pot_cap = 1
-            ml_cap = 1
 
     return {
         "potion_capacity": 0,
@@ -77,7 +73,7 @@ def deliver_capacity_plan(capacity_purchase : CapacityPurchase, order_id: int):
     with db.engine.begin() as connection:
         payment = 0
         if capacity_purchase.potion_capacity > 0:
-            payment += (-1000 * capacity_purchase.potion_capacity + -1000 * capacity_purchase.ml_capacity)
+            payment += (-1000 * capacity_purchase.potion_capacity)
             connection.execute(sqlalchemy.text("""UPDATE global_inventory SET curr_pot_cap = curr_pot_cap + 50 """))
         
         if capacity_purchase.ml_capacity > 0:

@@ -91,8 +91,8 @@ def get_bottle_plan():
                     mls.append(i)
                         # red = 268 ml for all, #green = 184 # blue = 248
             quant = min(make)
-            if quant > 3:
-                quant = quant // 3
+            if quant > 4:
+                quant = quant // 2
 
             capacity -= quant
 
