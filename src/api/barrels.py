@@ -81,7 +81,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
         capacity = curr_ml_cap - num_ml
         g = gold * .25
-        ordered_barrels = barrel_sizes(wholesale_catalog, gold)
+        ordered_barrels = barrel_sizes(wholesale_catalog)
 
     order_plan = []
     potion_colors = {"RED": False, "GREEN": False, "BLUE": False, "DARK": False}
