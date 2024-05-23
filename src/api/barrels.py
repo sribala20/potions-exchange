@@ -80,9 +80,9 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         num_ml = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM ml_ledger")).scalar()
 
         capacity = curr_ml_cap - num_ml
-        g = gold * .25
-        if g > 1000:
-            g = 1000
+        g = gold * .2
+        if g > 2000:
+            g = 2000
         ordered_barrels = barrel_sizes(wholesale_catalog)
 
     order_plan = []
@@ -107,7 +107,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     
 def barrel_sizes(wholesale_catalog):
     # Filter only medium and large barrels
-    filtered_barrels = [barrel for barrel in wholesale_catalog if 'SMALL' in barrel.sku or 'MEDIUM' in barrel.sku or 'LARGE' in barrel.sku]
+    filtered_barrels = [barrel for barrel in wholesale_catalog if 'MEDIUM' in barrel.sku or 'LARGE' in barrel.sku]
     # Sort barrels by size and price priority
     ordered_barrels = sorted(
         filtered_barrels,
