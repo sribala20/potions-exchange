@@ -97,9 +97,14 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     capacity -= barrel.ml_per_barrel 
                     if capacity < 0:
                         break
-                    order_plan.append({"sku": barrel.sku, "quantity": 1})
-                    g -= barrel.price
-                    break  # Move to the next barrel after buying one of a new color
+                    if 'SMALL' in barrel.sku:
+                        order_plan.append({"sku": barrel.sku, "quantity": 4})
+                        g -= (barrel.price * 4)
+                        break
+                    else:
+                        order_plan.append({"sku": barrel.sku, "quantity": 1})
+                        g -= barrel.price
+                        break  # Move to the next barrel after buying one of a new color
 
     print("barrels:", order_plan)
     print("gold left:", g)
