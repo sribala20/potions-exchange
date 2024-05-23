@@ -16,7 +16,8 @@ def get_catalog():
         stash = connection.execute(sqlalchemy.text("""SELECT sku, name, price, type, COALESCE(SUM(potion_ledger.change), 0) AS quantity
                                                    FROM potion_ledger
                                                    INNER JOIN potions ON potion_ledger.potion_sku = potions.sku
-                                                   GROUP BY potions.sku ORDER BY quantity DESC
+                                                   GROUP BY potions.sku 
+                                                   ORDER BY name ASC, quantity DESC
                                                    """)) # gets quantities by sku 
         
         limit = 0
