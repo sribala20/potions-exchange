@@ -81,8 +81,8 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
         capacity = curr_ml_cap - num_ml
         g = gold * .25
-        if g > 2000:
-            g = 2000
+        if g > 1000:
+            g = 1000
         ordered_barrels = barrel_sizes(wholesale_catalog)
 
     order_plan = []
