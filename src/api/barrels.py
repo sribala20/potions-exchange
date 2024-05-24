@@ -80,35 +80,34 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         num_ml = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(change), 0) FROM ml_ledger")).scalar()
 
         capacity = curr_ml_cap - num_ml
-        g = gold * .25
-        if g > 1000:
-            g = 500
+        g = 600
         ordered_barrels = barrel_sizes(wholesale_catalog)
 
     order_plan = []
-    potion_colors = {"RED": False, "GREEN": False, "BLUE": False, "DARK": False}
+    potion_colors = {"RED": True, "GREEN": False, "BLUE": False, "DARK": False}
     
     for barrel in ordered_barrels:
         if g >= barrel.price:
             # Check if the barrel is a new color type
             for color in potion_colors:
-                if color in barrel.sku and not potion_colors[color]:
-                    potion_colors[color] = True
-                    capacity -= barrel.ml_per_barrel 
-                    if capacity < 0:
-                        break
-                    if 'SMALL' in barrel.sku:
-                        order_plan.append({"sku": barrel.sku, "quantity": 4})
-                        g -= (barrel.price * 4)
-                        break
-                    else:
-                        order_plan.append({"sku": barrel.sku, "quantity": 1})
-                        g -= barrel.price
-                        break  # Move to the next barrel after buying one of a new color
+                if g >= barrel.price:
+                    if color in barrel.sku and not potion_colors[color]:
+                        potion_colors[color] = True
+                        capacity -= barrel.ml_per_barrel 
+                        if capacity < 0:
+                            break
+                        if 'SMALL' in barrel.sku:
+                            order_plan.append({"sku": barrel.sku, "quantity": 3})
+                            g -= (barrel.price * 3)
+                            break
+                        else:
+                            order_plan.append({"sku": barrel.sku, "quantity": 1})
+                            g -= barrel.price
+                            break  # Move to the next barrel after buying one of a new color
 
     print("barrels:", order_plan)
     print("gold left:", g)
-    return order_plan
+    return [order_plan]
     
 def barrel_sizes(wholesale_catalog):
     # Filter only medium and large barrels
