@@ -107,7 +107,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
     print("barrels:", order_plan)
     print("gold left:", g)
-    return [order_plan]
+    return order_plan
     
 def barrel_sizes(wholesale_catalog):
     # Filter only medium and large barrels
