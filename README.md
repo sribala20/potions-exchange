@@ -1,6 +1,6 @@
 # Central Coast Cauldrons
 
-Central Coast Cauldrons is a stubbed out API meant to serve as a starting point for learning how to build backend servies that integrate with a persistance layer. You will progressively build out your own forked version of the API and integrate with a progressively more sophisticated database backend. When you register your backend at the [Potion Exchange](https://potion-exchange.vercel.app/) simulated customers will shop at your store using your API. 
+Central Coast Cauldrons is a stubbed out API that integrates with a persistance layer. Backend registered at the [Potion Exchange](https://potion-exchange.vercel.app/), where simulated customers will shop at the store using the API. 
 
 The application's setting is a simulated fantasy RPG world with adventurers seeking to buy potions. You are one of many shops in this world that offer a variety (over 100k possibilities) of potions.
 
